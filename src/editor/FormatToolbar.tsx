@@ -12,46 +12,40 @@ type ActiveMap = Record<string, boolean>
 export default function FormatToolbar({ editorRef }: Props) {
   const [active, setActive] = useState<ActiveMap>({})
 
+  const update = (view: NonNullable<ReturnType<EditorRef['getView']>>) => {
+    const { state } = view
+    const { $from } = state.selection
+    const marks = state.storedMarks ?? $from.marks()
+
+    const isNodeActive = (type: string) =>
+      $from.parent.type === state.schema.nodes[type as keyof typeof state.schema.nodes]
+
+    const isParentActive = (type: string) =>
+      $from.node($from.depth)?.type === state.schema.nodes[type as keyof typeof state.schema.nodes] ||
+      $from.node($from.depth - 1)?.type === state.schema.nodes[type as keyof typeof state.schema.nodes]
+
+    setActive({
+      bold: marks.some(m => m.type === state.schema.marks.strong),
+      italic: marks.some(m => m.type === state.schema.marks.emphasis),
+      strike: marks.some(m => m.type === state.schema.marks.strike_through),
+      heading: isNodeActive('heading'),
+      quote: isParentActive('blockquote'),
+      code: isNodeActive('code_block'),
+      list: isParentActive('bullet_list') || isParentActive('ordered_list'),
+    })
+  }
+
   useEffect(() => {
     const view = editorRef.current?.getView()
     if (!view) return
 
-    const update = () => {
-      const { state } = view
-      const { $from } = state.selection
-      const marks = state.storedMarks || $from.marks()
-
-      const isNodeActive = (type: string) =>
-        $from.parent.type === state.schema.nodes[type as keyof typeof state.schema.nodes]
-
-      const isParentActive = (type: string) =>
-        $from.node($from.depth)?.type === state.schema.nodes[type as keyof typeof state.schema.nodes] ||
-        $from.node($from.depth - 1)?.type === state.schema.nodes[type as keyof typeof state.schema.nodes]
-
-      setActive({
-        bold: marks.some(m => m.type === state.schema.marks.strong),
-        italic: marks.some(m => m.type === state.schema.marks.emphasis),
-        strike: marks.some(m => m.type === state.schema.marks.strike_through),
-        heading: isNodeActive('heading'),
-        quote: isParentActive('blockquote'),
-        code: isNodeActive('code_block'),
-        list: isParentActive('bullet_list') || isParentActive('ordered_list'),
-      })
-    }
-
-    const origDispatch = view.dispatch
-    view.dispatch = (tr) => {
-      origDispatch.call(view, tr)
-      update()
-    }
-
-    update()
-    view.dom.addEventListener('mouseup', update)
-    view.dom.addEventListener('keyup', update)
+    const handler = () => update(view)
+    handler()
+    view.dom.addEventListener('mouseup', handler)
+    view.dom.addEventListener('keyup', handler)
     return () => {
-      view.dispatch = origDispatch
-      view.dom.removeEventListener('mouseup', update)
-      view.dom.removeEventListener('keyup', update)
+      view.dom.removeEventListener('mouseup', handler)
+      view.dom.removeEventListener('keyup', handler)
     }
   }, [editorRef])
 
@@ -60,6 +54,7 @@ export default function FormatToolbar({ editorRef }: Props) {
     if (!view) return
     fn(view)
     view.focus()
+    update(view)
   }
 
   const btn = (cmd: string, title: string, Icon: typeof Bold, onClick: () => void) => (
