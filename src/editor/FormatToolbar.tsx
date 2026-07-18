@@ -49,7 +49,7 @@ function Dropdown({ children, open, onClose }: { children: React.ReactNode; open
   useClickOutside(ref, onClose)
   if (!open) return null
   return (
-    <div ref={ref} className="absolute top-full left-0 mt-1 min-w-[150px] bg-paper-card dark:bg-dark-card border border-paper-border/60 dark:border-dark-border/60 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-50 py-1 overflow-hidden text-sm">
+    <div ref={ref} className="absolute top-full left-0 mt-1 min-w-[160px] bg-paper-card dark:bg-dark-card border border-paper-border/60 dark:border-dark-border/60 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-50 py-1 text-sm">
       {children}
     </div>
   )
@@ -59,7 +59,7 @@ function DropdownItem({ active, onClick, children }: { active?: boolean; onClick
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors cursor-pointer
+      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left whitespace-nowrap transition-colors cursor-pointer
         ${active ? 'text-seal dark:text-seal-dark bg-seal/8 dark:bg-seal-dark/12 font-medium' : 'text-ink dark:text-dark-text hover:bg-paper-border/50 dark:hover:bg-dark-border/50'}`}
     >
       {children}
@@ -184,8 +184,8 @@ export default function FormatToolbar({ editorRef }: Props) {
                 })
               }}
             >
-              <span className="w-5 text-xs text-ink-muted dark:text-dark-text-secondary font-medium">H{level}</span>
-              <span className="text-xs text-ink-muted dark:text-dark-text-secondary">级标题</span>
+            <span className="w-6 text-xs text-ink-muted dark:text-dark-text-secondary font-medium">H{level}</span>
+            <span className="text-xs text-ink-muted/50 dark:text-dark-text-secondary/50">级标题</span>
             </DropdownItem>
           ))}
         </Dropdown>
@@ -339,14 +339,13 @@ export default function FormatToolbar({ editorRef }: Props) {
           run(v => {
             const { state, dispatch } = v
             const headers = Array.from({ length: cols }, (_, i) => ` 列${i + 1} `)
-            let md = '|' + headers.join('|') + '|\n'
+            let md = '\n|' + headers.join('|') + '|\n'
             md += '|' + ' --- |'.repeat(cols) + '\n'
             for (let r = 1; r < rows; r++) {
               md += '|' + '   |'.repeat(cols) + '\n'
             }
-            const textNode = state.schema.text('\n' + md)
-            const para = state.schema.nodes.paragraph.createAndFill({}, textNode)
-            if (para) dispatch(state.tr.replaceSelectionWith(para).scrollIntoView())
+            const { from } = state.selection
+            dispatch(state.tr.insertText(md, from).scrollIntoView())
           })
         }}
         confirmText="插入"
