@@ -135,16 +135,6 @@ html.dark .ink-toolbar button.active {
   color: #fff;
 }
 
-.ink-toolbar button.active:hover {
-  background: var(--color-seal-hover);
-  color: #fff;
-}
-
-html.dark .ink-toolbar button.active:hover {
-  background: #EF4444;
-  color: #fff;
-}
-
 /* ── Milkdown editor ── */
 .milkdown {
   padding: 20px 16px;
