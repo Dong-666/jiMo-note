@@ -116,14 +116,6 @@ html.dark .ink-toolbar button {
   color: var(--color-dark-muted);
 }
 
-.ink-toolbar button:hover {
-  color: var(--color-ink);
-}
-
-html.dark .ink-toolbar button:hover {
-  color: var(--color-dark-text);
-}
-
 .ink-toolbar button.seal {
   color: var(--color-seal);
   font-weight: 700;
