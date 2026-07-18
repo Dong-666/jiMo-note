@@ -1,20 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { toggleMark, setBlockType, wrapIn } from 'prosemirror-commands'
 import { liftTarget } from 'prosemirror-transform'
-import { Bold, Italic, Strikethrough, Heading, Quote, Code, List } from 'lucide-react'
+import { Bold, Italic, Strikethrough, Heading, Quote, Code, List, ListOrdered, Table } from 'lucide-react'
 import type { EditorRef } from './MilkdownEditor'
+import Modal from '../components/Modal'
+
+const LANGUAGES = [
+  'javascript', 'typescript', 'python', 'css', 'html', 'bash', 'json',
+  'markdown', 'yaml', 'sql', 'rust', 'go', 'java', 'c', 'cpp', 'php',
+  'ruby', 'swift', 'kotlin', 'scala', 'lua', 'perl', 'r', 'dart',
+  'elixir', 'haskell', 'clojure', 'powershell', 'shell', 'diff',
+  'graphql', 'http', 'xml', 'toml', 'dockerfile', 'makefile',
+]
 
 interface Props {
   editorRef: React.RefObject<EditorRef | null>
 }
 
-type ActiveMap = Record<string, boolean>
+type ActiveMap = Record<string, boolean | number>
 
-function replaceBlock(state: import('prosemirror-state').EditorState, dispatch: (tr: import('prosemirror-state').Transaction) => void, nodeType: import('prosemirror-model').NodeType) {
+function replaceBlock(state: import('prosemirror-state').EditorState, dispatch: (tr: import('prosemirror-state').Transaction) => void, nodeType: import('prosemirror-model').NodeType, attrs?: Record<string, unknown>) {
   const { $from } = state.selection
   const start = $from.before($from.depth)
   const end = $from.after($from.depth)
-  dispatch(state.tr.setBlockType(start, end, nodeType).scrollIntoView())
+  dispatch(state.tr.setBlockType(start, end, nodeType, attrs).scrollIntoView())
 }
 
 function liftOut(state: import('prosemirror-state').EditorState, dispatch: (tr: import('prosemirror-state').Transaction) => void, nodeType: import('prosemirror-model').NodeType) {
@@ -25,36 +34,91 @@ function liftOut(state: import('prosemirror-state').EditorState, dispatch: (tr: 
   if (target != null) dispatch(state.tr.lift(range, target).scrollIntoView())
 }
 
+function useClickOutside(ref: React.RefObject<HTMLElement | null>, fn: () => void) {
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) fn()
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [ref, fn])
+}
+
+function Dropdown({ children, open, onClose }: { children: React.ReactNode; open: boolean; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useClickOutside(ref, onClose)
+  if (!open) return null
+  return (
+    <div ref={ref} className="absolute top-full left-0 mt-1 min-w-[140px] bg-paper-card dark:bg-dark-card border border-paper-border dark:border-dark-border rounded-lg shadow-xl z-50 py-1 overflow-hidden">
+      {children}
+    </div>
+  )
+}
+
+function DropdownItem({ active, onClick, children }: { active?: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors cursor-pointer
+        ${active ? 'text-seal dark:text-seal-dark bg-seal/8 dark:bg-seal-dark/12' : 'text-ink dark:text-dark-text hover:bg-paper-border/50 dark:hover:bg-dark-border/50'}`}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function FormatToolbar({ editorRef }: Props) {
   const [active, setActive] = useState<ActiveMap>({})
+  const [headingLevel, setHeadingLevel] = useState(0)
+  const [codeBlockLang, setCodeBlockLang] = useState('')
+  const [headingOpen, setHeadingOpen] = useState(false)
+  const [codeOpen, setCodeOpen] = useState(false)
+  const [codeLang, setCodeLang] = useState('')
+  const [listOpen, setListOpen] = useState(false)
+  const [tableModal, setTableModal] = useState(false)
+  const [tableRows, setTableRows] = useState('3')
+  const [tableCols, setTableCols] = useState('3')
 
   const update = (view: NonNullable<ReturnType<EditorRef['getView']>>) => {
     const { state } = view
     const { $from } = state.selection
     const marks = state.storedMarks ?? $from.marks()
+    const parent = $from.parent
 
     const isNodeActive = (type: string) =>
-      $from.parent.type === state.schema.nodes[type as keyof typeof state.schema.nodes]
+      parent.type === state.schema.nodes[type as keyof typeof state.schema.nodes]
 
     const isParentActive = (type: string) =>
       $from.node($from.depth)?.type === state.schema.nodes[type as keyof typeof state.schema.nodes] ||
       $from.node($from.depth - 1)?.type === state.schema.nodes[type as keyof typeof state.schema.nodes]
 
+    let hl = 0
+    if (isNodeActive('heading')) {
+      hl = parent.attrs.level as number
+    }
+    setHeadingLevel(hl)
+
+    let cl = ''
+    if (isNodeActive('code_block')) {
+      cl = parent.attrs.language as string || ''
+    }
+    setCodeBlockLang(cl)
+
     setActive({
       bold: marks.some(m => m.type === state.schema.marks.strong),
       italic: marks.some(m => m.type === state.schema.marks.emphasis),
       strike: marks.some(m => m.type === state.schema.marks.strike_through),
-      heading: isNodeActive('heading'),
+      heading: !!hl,
       quote: isParentActive('blockquote'),
       code: isNodeActive('code_block'),
-      list: isParentActive('bullet_list') || isParentActive('ordered_list'),
+      list: isParentActive('bullet_list'),
+      listOrdered: isParentActive('ordered_list'),
     })
   }
 
   useEffect(() => {
     const view = editorRef.current?.getView()
     if (!view) return
-
     const handler = () => update(view)
     handler()
     view.dom.addEventListener('mouseup', handler)
@@ -65,75 +129,249 @@ export default function FormatToolbar({ editorRef }: Props) {
     }
   }, [editorRef])
 
-  const run = (fn: (view: NonNullable<ReturnType<EditorRef['getView']>>) => void) => {
+  const run = useCallback((fn: (view: NonNullable<ReturnType<EditorRef['getView']>>) => void) => {
     const view = editorRef.current?.getView()
     if (!view) return
     fn(view)
     view.focus()
     update(view)
-  }
+  }, [editorRef])
 
-  const btn = (cmd: string, title: string, Icon: typeof Bold, onClick: () => void) => (
-    <button
-      key={cmd}
-      title={title}
-      onClick={onClick}
-      className={active[cmd] ? 'active' : ''}
-    >
+  const btn = (cmd: string, title: string, Icon: typeof Bold, onClick: () => void, extra?: React.ReactNode) => (
+    <button key={cmd} title={title} onClick={onClick} className={active[cmd] ? 'active' : ''}>
       <Icon size={19} />
+      {extra}
     </button>
   )
 
   return (
-    <div className="ink-toolbar">
+    <div className="ink-toolbar relative">
       {btn('bold', '粗体', Bold, () => run(v => toggleMark(v.state.schema.marks.strong)(v.state, v.dispatch)))}
       {btn('italic', '斜体', Italic, () => run(v => toggleMark(v.state.schema.marks.emphasis)(v.state, v.dispatch)))}
       {btn('strike', '删除线', Strikethrough, () => run(v => toggleMark(v.state.schema.marks.strike_through)(v.state, v.dispatch)))}
 
       <div className="ink-divider" />
 
-      {btn('heading', '标题', Heading, () =>
-        run(v => {
-          const { state, dispatch } = v
-          if (state.selection.$from.parent.type === state.schema.nodes.heading) {
-            replaceBlock(state, dispatch, state.schema.nodes.paragraph)
-          } else {
-            setBlockType(state.schema.nodes.heading, { level: 2 })(state, dispatch)
-          }
-        })
-      )}
+      {/* Heading dropdown */}
+      <div className="relative">
+        <button
+          title="标题"
+          onClick={() => setHeadingOpen(v => !v)}
+          className={active.heading ? 'active' : ''}
+        >
+          <Heading size={19} />
+          {active.heading && headingLevel ? (
+            <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-seal dark:text-seal-dark leading-none">
+              H{headingLevel}
+            </span>
+          ) : null}
+        </button>
+        <Dropdown open={headingOpen} onClose={() => setHeadingOpen(false)}>
+          {[1, 2, 3, 4, 5].map(level => (
+            <DropdownItem
+              key={level}
+              active={headingLevel === level}
+              onClick={() => {
+                setHeadingOpen(false)
+                run(v => {
+                  const { state, dispatch } = v
+                  if (state.selection.$from.parent.type === state.schema.nodes.heading &&
+                      state.selection.$from.parent.attrs.level === level) {
+                    replaceBlock(state, dispatch, state.schema.nodes.paragraph)
+                  } else {
+                    setBlockType(state.schema.nodes.heading, { level })(state, dispatch)
+                  }
+                })
+              }}
+            >
+              <span className="w-5 text-xs text-ink-muted dark:text-dark-text-secondary font-medium">H{level}</span>
+              <span className="text-xs text-ink-muted dark:text-dark-text-secondary">级标题</span>
+            </DropdownItem>
+          ))}
+        </Dropdown>
+      </div>
+
       {btn('quote', '引用', Quote, () =>
         run(v => {
           const { state, dispatch } = v
-          if (state.selection.$from.node(state.selection.$from.depth)?.type === state.schema.nodes.blockquote ||
-              state.selection.$from.node(state.selection.$from.depth - 1)?.type === state.schema.nodes.blockquote) {
+          const { $from } = state.selection
+          if ($from.node($from.depth)?.type === state.schema.nodes.blockquote ||
+              $from.node($from.depth - 1)?.type === state.schema.nodes.blockquote) {
             liftOut(state, dispatch, state.schema.nodes.blockquote)
           } else {
             wrapIn(state.schema.nodes.blockquote)(state, dispatch)
           }
         })
       )}
-      {btn('code', '代码', Code, () =>
-        run(v => {
-          const { state, dispatch } = v
-          if (state.selection.$from.parent.type === state.schema.nodes.code_block) {
-            replaceBlock(state, dispatch, state.schema.nodes.paragraph)
-          } else {
-            setBlockType(state.schema.nodes.code_block)(state, dispatch)
-          }
-        })
-      )}
-      {btn('list', '列表', List, () =>
-        run(v => {
-          const { state, dispatch } = v
-          if (state.selection.$from.node(state.selection.$from.depth)?.type === state.schema.nodes.bullet_list ||
-              state.selection.$from.node(state.selection.$from.depth - 1)?.type === state.schema.nodes.bullet_list) {
-            liftOut(state, dispatch, state.schema.nodes.bullet_list)
-          } else {
-            wrapIn(state.schema.nodes.bullet_list)(state, dispatch)
-          }
-        })
-      )}
+
+      {/* Code language dropdown */}
+      <div className="relative">
+        <button title="代码" onClick={() => setCodeOpen(v => !v)} className={active.code ? 'active' : ''}>
+          <Code size={19} />
+          {active.code && codeBlockLang ? (
+            <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[9px] font-mono text-seal dark:text-seal-dark leading-none truncate max-w-[36px]">
+              {codeBlockLang}
+            </span>
+          ) : null}
+        </button>
+        <Dropdown open={codeOpen} onClose={() => setCodeOpen(false)}>
+          <div className="px-2 py-1.5">
+            <input
+              autoFocus
+              value={codeLang}
+              onChange={e => setCodeLang(e.target.value)}
+              placeholder="搜索或输入语言..."
+              className="w-full px-2 py-1 text-xs bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded text-ink dark:text-dark-text placeholder-ink-muted/50 outline-none"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && codeLang.trim()) {
+                  setCodeOpen(false)
+                  run(v => {
+                    const { state, dispatch } = v
+                    if (state.selection.$from.parent.type === state.schema.nodes.code_block) {
+                      const attrs: Record<string, unknown> = {}
+                      attrs.language = codeLang.trim()
+                      replaceBlock(state, dispatch, state.schema.nodes.code_block, attrs)
+                    } else {
+                      setBlockType(state.schema.nodes.code_block, { language: codeLang.trim() })(state, dispatch)
+                    }
+                  })
+                }
+              }}
+            />
+          </div>
+          <div className="max-h-[160px] overflow-y-auto">
+            {LANGUAGES.filter(l => !codeLang || l.includes(codeLang.toLowerCase())).map(lang => (
+              <DropdownItem
+                key={lang}
+                active={codeBlockLang === lang}
+                onClick={() => {
+                  setCodeLang('')
+                  setCodeOpen(false)
+                  run(v => {
+                    const { state, dispatch } = v
+                    if (state.selection.$from.parent.type === state.schema.nodes.code_block) {
+                      replaceBlock(state, dispatch, state.schema.nodes.code_block, { language: lang })
+                    } else {
+                      setBlockType(state.schema.nodes.code_block, { language: lang })(state, dispatch)
+                    }
+                  })
+                }}
+              >
+                <span className="text-xs font-mono">{lang}</span>
+              </DropdownItem>
+            ))}
+          </div>
+        </Dropdown>
+      </div>
+
+      {/* List dropdown */}
+      <div className="relative">
+        <button title="列表" onClick={() => setListOpen(v => !v)} className={(active.list || active.listOrdered) ? 'active' : ''}>
+          {(active.listOrdered && !active.list) ? <ListOrdered size={19} /> : <List size={19} />}
+        </button>
+        <Dropdown open={listOpen} onClose={() => setListOpen(false)}>
+          <DropdownItem
+            active={!!active.list}
+            onClick={() => {
+              setListOpen(false)
+              run(v => {
+                const { state, dispatch } = v
+                const { $from } = state.selection
+                if ($from.node($from.depth)?.type === state.schema.nodes.bullet_list ||
+                    $from.node($from.depth - 1)?.type === state.schema.nodes.bullet_list) {
+                  liftOut(state, dispatch, state.schema.nodes.bullet_list)
+                } else if ($from.node($from.depth)?.type === state.schema.nodes.ordered_list ||
+                    $from.node($from.depth - 1)?.type === state.schema.nodes.ordered_list) {
+                  const range = $from.blockRange(v.state.selection.$to, n => n.type === state.schema.nodes.ordered_list)
+                  if (range) {
+                    const target = liftTarget(range)
+                    if (target != null) dispatch(state.tr.lift(range, target).scrollIntoView())
+                  }
+                } else {
+                  wrapIn(state.schema.nodes.bullet_list)(state, dispatch)
+                }
+              })
+            }}
+          >
+            <List size={16} /> 无序列表
+          </DropdownItem>
+          <DropdownItem
+            active={!!active.listOrdered}
+            onClick={() => {
+              setListOpen(false)
+              run(v => {
+                const { state, dispatch } = v
+                const { $from } = state.selection
+                if ($from.node($from.depth)?.type === state.schema.nodes.ordered_list ||
+                    $from.node($from.depth - 1)?.type === state.schema.nodes.ordered_list) {
+                  liftOut(state, dispatch, state.schema.nodes.ordered_list)
+                } else if ($from.node($from.depth)?.type === state.schema.nodes.bullet_list ||
+                    $from.node($from.depth - 1)?.type === state.schema.nodes.bullet_list) {
+                  const range = $from.blockRange(v.state.selection.$to, n => n.type === state.schema.nodes.bullet_list)
+                  if (range) {
+                    const target = liftTarget(range)
+                    if (target != null) dispatch(state.tr.lift(range, target).scrollIntoView())
+                  }
+                } else {
+                  wrapIn(state.schema.nodes.ordered_list)(state, dispatch)
+                }
+              })
+            }}
+          >
+            <ListOrdered size={16} /> 有序列表
+          </DropdownItem>
+        </Dropdown>
+      </div>
+
+      {/* Table button */}
+      <button title="表格" onClick={() => { setTableRows('3'); setTableCols('3'); setTableModal(true) }}>
+        <Table size={19} />
+      </button>
+
+      <Modal
+        open={tableModal}
+        title="插入表格"
+        onCancel={() => setTableModal(false)}
+        onConfirm={() => {
+          const rows = parseInt(tableRows) || 2
+          const cols = parseInt(tableCols) || 2
+          setTableModal(false)
+          run(v => {
+            const { state, dispatch } = v
+            const headers = Array.from({ length: cols }, (_, i) => ` 列${i + 1} `)
+            let md = '|' + headers.join('|') + '|\n'
+            md += '|' + ' --- |'.repeat(cols) + '\n'
+            for (let r = 1; r < rows; r++) {
+              md += '|' + '   |'.repeat(cols) + '\n'
+            }
+            dispatch(state.tr.insertText(md, state.selection.from).scrollIntoView())
+          })
+        }}
+        confirmText="插入"
+        confirmDisabled={!tableRows || !tableCols || parseInt(tableRows) < 1 || parseInt(tableCols) < 1}
+      >
+        <div className="flex gap-3">
+          <label className="flex-1">
+            <span className="block text-xs text-ink-muted dark:text-dark-text-secondary mb-1">行</span>
+            <input
+              autoFocus
+              type="number" min={1} max={20}
+              value={tableRows}
+              onChange={e => setTableRows(e.target.value)}
+              className="w-full px-2 py-1.5 text-sm bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded text-ink dark:text-dark-text outline-none focus:border-seal"
+            />
+          </label>
+          <label className="flex-1">
+            <span className="block text-xs text-ink-muted dark:text-dark-text-secondary mb-1">列</span>
+            <input
+              type="number" min={1} max={20}
+              value={tableCols}
+              onChange={e => setTableCols(e.target.value)}
+              className="w-full px-2 py-1.5 text-sm bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded text-ink dark:text-dark-text outline-none focus:border-seal"
+            />
+          </label>
+        </div>
+      </Modal>
     </div>
   )
 }
