@@ -135,6 +135,16 @@ html.dark .ink-toolbar button.seal {
   color: var(--color-seal-dark);
 }
 
+.ink-toolbar button.active {
+  background: var(--color-paper-border);
+  color: var(--color-seal);
+}
+
+html.dark .ink-toolbar button.active {
+  background: var(--color-dark-border);
+  color: var(--color-seal-dark);
+}
+
 /* ── Milkdown editor ── */
 .milkdown {
   padding: 20px 16px;
