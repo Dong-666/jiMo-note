@@ -96,6 +96,10 @@ class GitHubService {
     })
   }
 
+  async createDir(path: string): Promise<void> {
+    await this.createFile(`${path}/.gitkeep`, '', 'Create directory via 极墨')
+  }
+
   async createFile(path: string, content = '', message = 'Create via 极墨'): Promise<void> {
     const client = await this.getClient()
     await client.rest.repos.createOrUpdateFileContents({

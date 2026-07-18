@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Settings, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { Settings, Plus, FileText, Folder } from 'lucide-react'
 import { useAuthStore } from '../stores/auth-store'
 import { useFileTreeStore } from '../stores/file-tree-store'
 import { gitService } from '../services/git-service'
@@ -11,6 +12,7 @@ export default function FileTreePage() {
   const navigate = useNavigate()
   const { owner = '', name = '' } = useParams()
   const { isVerified, username } = useAuthStore()
+  const [showMenu, setShowMenu] = useState(false)
 
   useEffect(() => {
     if (!isVerified) {
@@ -45,22 +47,55 @@ export default function FileTreePage() {
         <FileList />
       </div>
 
-      <div className="fixed bottom-6 right-6 max-w-lg mx-auto" style={{ left: '50%', transform: 'translateX(-50%)' }}>
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+        {showMenu && (
+          <>
+            <button
+              onClick={() => {
+                setShowMenu(false)
+                const name = prompt('文件夹名')
+                if (name) {
+                  const store = useFileTreeStore.getState()
+                  const path = store.currentPath ? `${store.currentPath}/${name}` : name
+                  store.createDir(path)
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-paper-card dark:bg-dark-card
+                         border border-paper-border dark:border-dark-border rounded-lg shadow-md
+                         text-sm text-ink dark:text-dark-text
+                         hover:bg-paper-border/50 dark:hover:bg-dark-border/50 transition-colors cursor-pointer"
+            >
+              <Folder size={16} className="text-ink-muted dark:text-dark-text-secondary" />
+              新建文件夹
+            </button>
+            <button
+              onClick={() => {
+                setShowMenu(false)
+                const name = prompt('文件名（.md）')
+                if (name) {
+                  const store = useFileTreeStore.getState()
+                  const path = store.currentPath
+                    ? `${store.currentPath}/${name.endsWith('.md') ? name : name + '.md'}`
+                    : name.endsWith('.md') ? name : name + '.md'
+                  store.createFile(path)
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-paper-card dark:bg-dark-card
+                         border border-paper-border dark:border-dark-border rounded-lg shadow-md
+                         text-sm text-ink dark:text-dark-text
+                         hover:bg-paper-border/50 dark:hover:bg-dark-border/50 transition-colors cursor-pointer"
+            >
+              <FileText size={16} className="text-ink-muted dark:text-dark-text-secondary" />
+              新建文件
+            </button>
+          </>
+        )}
         <button
-          onClick={() => {
-            const name = prompt('文件名（.md）')
-            if (name) {
-              const store = useFileTreeStore.getState()
-              const path = store.currentPath
-                ? `${store.currentPath}/${name.endsWith('.md') ? name : name + '.md'}`
-                : name.endsWith('.md') ? name : name + '.md'
-              store.createFile(path)
-            }
-          }}
+          onClick={() => setShowMenu(v => !v)}
           className="w-12 h-12 bg-seal text-white rounded-full flex items-center justify-center
                      shadow-lg hover:bg-seal-hover active:scale-95 transition-all duration-150 cursor-pointer"
         >
-          <Plus size={24} />
+          <Plus size={24} className={showMenu ? 'rotate-45' : ''} />
         </button>
       </div>
     </div>

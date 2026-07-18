@@ -10,6 +10,7 @@ interface FileTreeState {
   navigateTo: (path: string) => Promise<void>
   refresh: () => Promise<void>
   createFile: (path: string) => Promise<void>
+  createDir: (path: string) => Promise<void>
 }
 
 export const useFileTreeStore = create<FileTreeState>((set, get) => ({
@@ -51,6 +52,15 @@ export const useFileTreeStore = create<FileTreeState>((set, get) => ({
       await get().refresh()
     } catch (e) {
       set({ error: e instanceof Error ? e.message : '创建失败' })
+    }
+  },
+
+  createDir: async (path) => {
+    try {
+      await gitService.createDir(path)
+      await get().refresh()
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : '创建文件夹失败' })
     }
   },
 }))
