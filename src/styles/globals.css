@@ -1,0 +1,322 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #FDFBF7;
+  --color-paper-card: #FAF8F4;
+  --color-paper-border: #E8E4DE;
+  --color-ink: #1A1A1A;
+  --color-ink-light: #2C2C2C;
+  --color-ink-muted: #5C5C5C;
+  --color-seal: #C53030;
+  --color-seal-hover: #B91C1C;
+  --color-seal-dark: #EF4444;
+  --color-code-bg: #F5F2ED;
+  --color-dark-bg: #1A1A1A;
+  --color-dark-card: #252526;
+  --color-dark-border: #2E2E30;
+  --color-dark-text: #F0EDE8;
+  --color-dark-text-secondary: #E4E0D8;
+  --color-dark-muted: #BCB8B2;
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-mono: 'Cascadia Code', 'SF Mono', 'Fira Code', monospace;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+html.dark body {
+  background-color: var(--color-dark-bg);
+  color: var(--color-dark-text);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input, textarea, button {
+    font-family: inherit;
+  }
+}
+
+/* ── Ink-style generic helpers ── */
+.ink-card {
+  background: var(--color-paper-card);
+  border: 1px solid var(--color-paper-border);
+  border-radius: 12px;
+}
+
+html.dark .ink-card {
+  background: var(--color-dark-card);
+  border-color: var(--color-dark-border);
+}
+
+.ink-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-paper-border);
+  background: var(--color-paper-card);
+}
+
+html.dark .ink-header-bar {
+  border-bottom-color: var(--color-dark-border);
+  background: var(--color-dark-card);
+}
+
+.ink-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--color-paper-card);
+  border-top: 1px solid var(--color-paper-border);
+}
+
+html.dark .ink-toolbar {
+  background: var(--color-dark-card);
+  border-top-color: var(--color-dark-border);
+}
+
+.ink-toolbar .ink-divider {
+  width: 1px;
+  background: var(--color-paper-border);
+  margin: 8px 4px;
+}
+
+html.dark .ink-toolbar .ink-divider {
+  background: var(--color-dark-border);
+}
+
+.ink-toolbar button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--color-ink-muted);
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html.dark .ink-toolbar button {
+  color: var(--color-dark-muted);
+}
+
+.ink-toolbar button:hover {
+  background: var(--color-paper-border);
+  color: var(--color-ink);
+}
+
+html.dark .ink-toolbar button:hover {
+  background: var(--color-dark-border);
+  color: var(--color-dark-text);
+}
+
+.ink-toolbar button.seal {
+  color: var(--color-seal);
+  font-weight: 700;
+}
+
+html.dark .ink-toolbar button.seal {
+  color: var(--color-seal-dark);
+}
+
+/* ── Milkdown editor ── */
+.milkdown {
+  padding: 20px 16px;
+}
+
+.milkdown .ProseMirror {
+  outline: none;
+  min-height: calc(100dvh - 8rem);
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--color-ink-light);
+  font-family: var(--font-serif);
+}
+
+.milkdown .ProseMirror > *:first-child {
+  margin-top: 0;
+}
+
+.milkdown .ProseMirror h1 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-paper-border);
+  line-height: 1.3;
+}
+
+.milkdown .ProseMirror h2 {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 20px 0 8px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-paper-border);
+  line-height: 1.35;
+}
+
+.milkdown .ProseMirror h3 {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 16px 0 6px 0;
+  line-height: 1.4;
+}
+
+.milkdown .ProseMirror p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--color-ink-light);
+  margin: 0 0 12px 0;
+}
+
+.milkdown .ProseMirror strong {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.milkdown .ProseMirror em {
+  font-style: italic;
+}
+
+.milkdown .ProseMirror ul {
+  margin: 12px 0;
+  padding-left: 24px;
+  list-style: disc;
+}
+
+.milkdown .ProseMirror ol {
+  margin: 12px 0;
+  padding-left: 24px;
+  list-style: decimal;
+}
+
+.milkdown .ProseMirror ul li {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--color-ink-light);
+  margin: 4px 0;
+}
+
+.milkdown .ProseMirror ul > li::marker {
+  color: var(--color-seal);
+  font-size: 0.75em;
+}
+
+.milkdown .ProseMirror ol li {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--color-ink-light);
+  margin: 4px 0;
+}
+
+.milkdown .ProseMirror code {
+  background: var(--color-code-bg);
+  border: 1px solid var(--color-paper-border);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-ink);
+  margin: 0 1px;
+  word-break: break-word;
+}
+
+.milkdown .ProseMirror pre {
+  background: var(--color-code-bg);
+  border: 1px solid var(--color-paper-border);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.milkdown .ProseMirror pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+
+.milkdown .ProseMirror blockquote {
+  margin: 12px 0;
+  padding: 0 0 0 16px;
+  border-left: 3px solid var(--color-seal);
+  color: var(--color-ink-muted);
+  font-style: italic;
+}
+
+.milkdown .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--color-paper-border);
+  margin: 20px 0;
+}
+
+/* ── Dark Mode Overrides ── */
+
+html.dark .milkdown .ProseMirror {
+  color: var(--color-dark-text-secondary);
+}
+
+html.dark .milkdown .ProseMirror h1,
+html.dark .milkdown .ProseMirror h2,
+html.dark .milkdown .ProseMirror h3 {
+  color: var(--color-dark-text);
+  border-bottom-color: var(--color-dark-border);
+}
+
+html.dark .milkdown .ProseMirror p,
+html.dark .milkdown .ProseMirror li {
+  color: var(--color-dark-text);
+}
+
+html.dark .milkdown .ProseMirror strong {
+  color: var(--color-dark-text);
+}
+
+html.dark .milkdown .ProseMirror code {
+  background: #1F1F20;
+  border-color: var(--color-dark-border);
+  color: var(--color-dark-text);
+}
+
+html.dark .milkdown .ProseMirror pre {
+  background: #1F1F20;
+  border-color: var(--color-dark-border);
+}
+
+html.dark .milkdown .ProseMirror pre code {
+  color: var(--color-dark-text);
+}
+
+html.dark .milkdown .ProseMirror blockquote {
+  color: var(--color-dark-text-secondary);
+}
+
+html.dark .milkdown .ProseMirror hr {
+  border-top-color: var(--color-dark-border);
+}
+
