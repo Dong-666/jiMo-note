@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toggleMark, setBlockType, wrapIn } from 'prosemirror-commands'
+import { liftTarget } from 'prosemirror-transform'
 import { Bold, Italic, Strikethrough, Heading, Quote, Code, List } from 'lucide-react'
 import type { EditorRef } from './MilkdownEditor'
 
@@ -76,10 +77,52 @@ export default function FormatToolbar({ editorRef }: Props) {
 
       <div className="ink-divider" />
 
-      {btn('heading', '标题', Heading, () => run(v => setBlockType(v.state.schema.nodes.heading, { level: 2 })(v.state, v.dispatch)))}
-      {btn('quote', '引用', Quote, () => run(v => wrapIn(v.state.schema.nodes.blockquote)(v.state, v.dispatch)))}
-      {btn('code', '代码', Code, () => run(v => setBlockType(v.state.schema.nodes.code_block)(v.state, v.dispatch)))}
-      {btn('list', '列表', List, () => run(v => wrapIn(v.state.schema.nodes.bullet_list)(v.state, v.dispatch)))}
+      {btn('heading', '标题', Heading, () =>
+        run(v => {
+          const { state, dispatch } = v
+          if (state.selection.$from.parent.type === state.schema.nodes.heading)
+            return setBlockType(state.schema.nodes.paragraph)(state, dispatch)
+          setBlockType(state.schema.nodes.heading, { level: 2 })(state, dispatch)
+        })
+      )}
+      {btn('quote', '引用', Quote, () =>
+        run(v => {
+          const { state, dispatch } = v
+          const { $from, $to } = state.selection
+          if ($from.node($from.depth)?.type === state.schema.nodes.blockquote ||
+              $from.node($from.depth - 1)?.type === state.schema.nodes.blockquote) {
+            const range = $from.blockRange($to, n => n.type === state.schema.nodes.blockquote)
+            if (!range) return
+            const target = liftTarget(range)
+            if (target != null) dispatch(state.tr.lift(range, target))
+            return
+          }
+          wrapIn(state.schema.nodes.blockquote)(state, dispatch)
+        })
+      )}
+      {btn('code', '代码', Code, () =>
+        run(v => {
+          const { state, dispatch } = v
+          if (state.selection.$from.parent.type === state.schema.nodes.code_block)
+            return setBlockType(state.schema.nodes.paragraph)(state, dispatch)
+          setBlockType(state.schema.nodes.code_block)(state, dispatch)
+        })
+      )}
+      {btn('list', '列表', List, () =>
+        run(v => {
+          const { state, dispatch } = v
+          const { $from, $to } = state.selection
+          if ($from.node($from.depth)?.type === state.schema.nodes.bullet_list ||
+              $from.node($from.depth - 1)?.type === state.schema.nodes.bullet_list) {
+            const range = $from.blockRange($to, n => n.type === state.schema.nodes.bullet_list)
+            if (!range) return
+            const target = liftTarget(range)
+            if (target != null) dispatch(state.tr.lift(range, target))
+            return
+          }
+          wrapIn(state.schema.nodes.bullet_list)(state, dispatch)
+        })
+      )}
     </div>
   )
 }
