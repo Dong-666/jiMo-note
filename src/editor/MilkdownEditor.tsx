@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle } from 'react'
 import { Editor, rootCtx, defaultValueCtx, editorViewCtx, serializerCtx, schemaCtx } from '@milkdown/core'
 import { commonmark, createCodeBlockInputRule } from '@milkdown/preset-commonmark'
+import { strikethroughSchema, strikethroughInputRule, strikethroughKeymap } from '@milkdown/preset-gfm'
 import { history } from '@milkdown/plugin-history'
 import { trailing } from '@milkdown/plugin-trailing'
 import { clipboard } from '@milkdown/plugin-clipboard'
@@ -91,6 +92,9 @@ const EditorInner = forwardRef<EditorRef, { content: string }>(({ content }, ref
       .use(wrapInHeading)
       .use(strongInputRulePlugin)
       .use(emphasisInputRulePlugin)
+      .use(strikethroughSchema)
+      .use(strikethroughInputRule)
+      .use(strikethroughKeymap)
   }, [])
 
   useImperativeHandle(ref, () => ({
