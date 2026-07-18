@@ -18,6 +18,7 @@ declare module 'lucide-react' {
   export const LogOut: Icon
   export const Sun: Icon
   export const Moon: Icon
+  export const Monitor: Icon
   export const Clock: Icon
   export const Bold: Icon
   export const Italic: Icon

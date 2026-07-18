@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, LogOut, Key, Github, Moon, Sun } from 'lucide-react'
+import { ArrowLeft, LogOut, Key, Github, Monitor, Moon, Sun } from 'lucide-react'
 import { useAuthStore } from '../stores/auth-store'
 import { useThemeStore } from '../stores/theme-store'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
   const { username, owner, repo, token, logout } = useAuthStore()
-  const { isDark, toggle } = useThemeStore()
+  const { mode, setMode } = useThemeStore()
 
   const maskedToken = token
     ? token.slice(0, 8) + '••••••••' + token.slice(-4)
@@ -49,17 +49,19 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-xs font-medium text-ink-muted dark:text-dark-text-secondary uppercase tracking-wider mb-3">外观</h2>
           <div className="ink-card overflow-hidden">
-            <button
-              onClick={toggle}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left
-                         text-ink dark:text-dark-text hover:bg-paper-border/30 dark:hover:bg-dark-border/30
-                         transition-colors cursor-pointer"
-            >
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
-              <span className="text-sm font-medium">
-                {isDark ? '浅色模式' : '深色模式'}
-              </span>
-            </button>
+            {([['system', '跟随系统', Monitor], ['light', '浅色', Sun], ['dark', '深色', Moon]] as const).map(([val, label, Icon]) => (
+              <button
+                key={val}
+                onClick={() => setMode(val)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left
+                           text-ink dark:text-dark-text hover:bg-paper-border/30 dark:hover:bg-dark-border/30
+                           transition-colors cursor-pointer"
+              >
+                <Icon size={18} className={mode === val ? 'text-seal' : 'text-ink-muted dark:text-dark-text-secondary'} />
+                <span className={`text-sm font-medium ${mode === val ? 'text-seal' : ''}`}>{label}</span>
+                {mode === val && <span className="ml-auto text-xs text-seal">✓</span>}
+              </button>
+            ))}
           </div>
         </section>
 
