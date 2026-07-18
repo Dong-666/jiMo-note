@@ -10,6 +10,21 @@ interface Props {
 
 type ActiveMap = Record<string, boolean>
 
+function replaceBlock(state: import('prosemirror-state').EditorState, dispatch: (tr: import('prosemirror-state').Transaction) => void, nodeType: import('prosemirror-model').NodeType) {
+  const { $from } = state.selection
+  const start = $from.before($from.depth)
+  const end = $from.after($from.depth)
+  dispatch(state.tr.setBlockType(start, end, nodeType).scrollIntoView())
+}
+
+function liftOut(state: import('prosemirror-state').EditorState, dispatch: (tr: import('prosemirror-state').Transaction) => void, nodeType: import('prosemirror-model').NodeType) {
+  const { $from, $to } = state.selection
+  const range = $from.blockRange($to, n => n.type === nodeType)
+  if (!range) return
+  const target = liftTarget(range)
+  if (target != null) dispatch(state.tr.lift(range, target).scrollIntoView())
+}
+
 export default function FormatToolbar({ editorRef }: Props) {
   const [active, setActive] = useState<ActiveMap>({})
 
@@ -80,47 +95,43 @@ export default function FormatToolbar({ editorRef }: Props) {
       {btn('heading', '标题', Heading, () =>
         run(v => {
           const { state, dispatch } = v
-          if (state.selection.$from.parent.type === state.schema.nodes.heading)
-            return setBlockType(state.schema.nodes.paragraph)(state, dispatch)
-          setBlockType(state.schema.nodes.heading, { level: 2 })(state, dispatch)
+          if (state.selection.$from.parent.type === state.schema.nodes.heading) {
+            replaceBlock(state, dispatch, state.schema.nodes.paragraph)
+          } else {
+            setBlockType(state.schema.nodes.heading, { level: 2 })(state, dispatch)
+          }
         })
       )}
       {btn('quote', '引用', Quote, () =>
         run(v => {
           const { state, dispatch } = v
-          const { $from, $to } = state.selection
-          if ($from.node($from.depth)?.type === state.schema.nodes.blockquote ||
-              $from.node($from.depth - 1)?.type === state.schema.nodes.blockquote) {
-            const range = $from.blockRange($to, n => n.type === state.schema.nodes.blockquote)
-            if (!range) return
-            const target = liftTarget(range)
-            if (target != null) dispatch(state.tr.lift(range, target))
-            return
+          if (state.selection.$from.node(state.selection.$from.depth)?.type === state.schema.nodes.blockquote ||
+              state.selection.$from.node(state.selection.$from.depth - 1)?.type === state.schema.nodes.blockquote) {
+            liftOut(state, dispatch, state.schema.nodes.blockquote)
+          } else {
+            wrapIn(state.schema.nodes.blockquote)(state, dispatch)
           }
-          wrapIn(state.schema.nodes.blockquote)(state, dispatch)
         })
       )}
       {btn('code', '代码', Code, () =>
         run(v => {
           const { state, dispatch } = v
-          if (state.selection.$from.parent.type === state.schema.nodes.code_block)
-            return setBlockType(state.schema.nodes.paragraph)(state, dispatch)
-          setBlockType(state.schema.nodes.code_block)(state, dispatch)
+          if (state.selection.$from.parent.type === state.schema.nodes.code_block) {
+            replaceBlock(state, dispatch, state.schema.nodes.paragraph)
+          } else {
+            setBlockType(state.schema.nodes.code_block)(state, dispatch)
+          }
         })
       )}
       {btn('list', '列表', List, () =>
         run(v => {
           const { state, dispatch } = v
-          const { $from, $to } = state.selection
-          if ($from.node($from.depth)?.type === state.schema.nodes.bullet_list ||
-              $from.node($from.depth - 1)?.type === state.schema.nodes.bullet_list) {
-            const range = $from.blockRange($to, n => n.type === state.schema.nodes.bullet_list)
-            if (!range) return
-            const target = liftTarget(range)
-            if (target != null) dispatch(state.tr.lift(range, target))
-            return
+          if (state.selection.$from.node(state.selection.$from.depth)?.type === state.schema.nodes.bullet_list ||
+              state.selection.$from.node(state.selection.$from.depth - 1)?.type === state.schema.nodes.bullet_list) {
+            liftOut(state, dispatch, state.schema.nodes.bullet_list)
+          } else {
+            wrapIn(state.schema.nodes.bullet_list)(state, dispatch)
           }
-          wrapIn(state.schema.nodes.bullet_list)(state, dispatch)
         })
       )}
     </div>
