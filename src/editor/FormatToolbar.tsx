@@ -49,7 +49,7 @@ function Dropdown({ children, open, onClose }: { children: React.ReactNode; open
   useClickOutside(ref, onClose)
   if (!open) return null
   return (
-    <div ref={ref} className="absolute top-full left-0 mt-1 min-w-[160px] bg-paper-card dark:bg-dark-card border border-paper-border/60 dark:border-dark-border/60 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-50 py-1 text-sm">
+    <div ref={ref} className="absolute top-full left-0 mt-1 min-w-[180px] max-w-[calc(100vw-24px)] bg-paper-card dark:bg-dark-card border border-paper-border/60 dark:border-dark-border/60 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-50 py-1 overflow-hidden text-sm">
       {children}
     </div>
   )
@@ -59,7 +59,7 @@ function DropdownItem({ active, onClick, children }: { active?: boolean; onClick
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left whitespace-nowrap transition-colors cursor-pointer
+      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left truncate transition-colors cursor-pointer
         ${active ? 'text-seal dark:text-seal-dark bg-seal/8 dark:bg-seal-dark/12 font-medium' : 'text-ink dark:text-dark-text hover:bg-paper-border/50 dark:hover:bg-dark-border/50'}`}
     >
       {children}
@@ -338,14 +338,19 @@ export default function FormatToolbar({ editorRef }: Props) {
           setTableModal(false)
           run(v => {
             const { state, dispatch } = v
-            const headers = Array.from({ length: cols }, (_, i) => ` 列${i + 1} `)
-            let md = '\n|' + headers.join('|') + '|\n'
-            md += '|' + ' --- |'.repeat(cols) + '\n'
-            for (let r = 1; r < rows; r++) {
-              md += '|' + '   |'.repeat(cols) + '\n'
+            const schema = state.schema
+            const makeCell = (isHeader: boolean) => {
+              const type = isHeader ? schema.nodes.table_header : schema.nodes.table_cell
+              return type.createAndFill({}, schema.text(' '))!
             }
-            const { from } = state.selection
-            dispatch(state.tr.insertText(md, from).scrollIntoView())
+            const makeRow = (isHeader: boolean) => {
+              const cells = Array.from({ length: cols }, () => makeCell(isHeader))
+              return schema.nodes.table_row.createAndFill({}, cells)!
+            }
+            const headerRow = makeRow(true)
+            const bodyRows = Array.from({ length: rows - 1 }, () => makeRow(false))
+            const table = schema.nodes.table.createAndFill({}, [headerRow, ...bodyRows])
+            if (table) dispatch(state.tr.replaceSelectionWith(table).scrollIntoView())
           })
         }}
         confirmText="插入"

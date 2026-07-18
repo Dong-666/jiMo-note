@@ -153,6 +153,45 @@ html.dark .ink-toolbar button.active {
   margin-top: 0;
 }
 
+.milkdown .ProseMirror table {
+  border-collapse: collapse;
+  margin: 12px 0;
+  width: 100%;
+  font-size: 14px;
+}
+
+.milkdown .ProseMirror th,
+.milkdown .ProseMirror td {
+  border: 1px solid var(--color-paper-border);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.milkdown .ProseMirror th {
+  background: var(--color-paper-border);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.milkdown .ProseMirror td {
+  color: var(--color-ink-light);
+}
+
+html.dark .milkdown .ProseMirror th,
+html.dark .milkdown .ProseMirror td {
+  border-color: var(--color-dark-border);
+}
+
+html.dark .milkdown .ProseMirror th {
+  background: var(--color-dark-border);
+  color: var(--color-dark-text);
+}
+
+html.dark .milkdown .ProseMirror td {
+  color: var(--color-dark-text-secondary);
+}
+
 .milkdown .ProseMirror h1 {
   font-family: var(--font-serif);
   font-size: 22px;

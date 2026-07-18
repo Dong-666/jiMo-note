@@ -1,7 +1,11 @@
 import { forwardRef, useImperativeHandle } from 'react'
 import { Editor, rootCtx, defaultValueCtx, editorViewCtx, serializerCtx, schemaCtx } from '@milkdown/core'
 import { commonmark, createCodeBlockInputRule } from '@milkdown/preset-commonmark'
-import { strikethroughAttr, strikethroughSchema, strikethroughInputRule, strikethroughKeymap } from '@milkdown/preset-gfm'
+import {
+  strikethroughAttr, strikethroughSchema, strikethroughInputRule, strikethroughKeymap,
+  tableSchema, tableHeaderRowSchema, tableRowSchema, tableCellSchema, tableHeaderSchema,
+  tableEditingPlugin, tablePasteRule, tableKeymap,
+} from '@milkdown/preset-gfm'
 import { prism } from '@milkdown/plugin-prism'
 import { history } from '@milkdown/plugin-history'
 import { trailing } from '@milkdown/plugin-trailing'
@@ -97,6 +101,14 @@ const EditorInner = forwardRef<EditorRef, { content: string }>(({ content }, ref
       .use(strikethroughSchema)
       .use(strikethroughInputRule)
       .use(strikethroughKeymap)
+      .use(tableSchema)
+      .use(tableHeaderRowSchema)
+      .use(tableRowSchema)
+      .use(tableCellSchema)
+      .use(tableHeaderSchema)
+      .use(tableEditingPlugin)
+      .use(tablePasteRule)
+      .use(tableKeymap)
       .use(prism)
   }, [])
 
