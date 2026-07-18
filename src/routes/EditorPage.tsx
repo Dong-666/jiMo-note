@@ -114,6 +114,8 @@ export default function EditorPage() {
         </button>
       </header>
 
+      <FormatToolbar editorRef={editorRef} />
+
       <div className="flex-1 overflow-y-auto bg-paper dark:bg-dark-bg">
         {loading ? (
           <div className="flex items-center justify-center h-full">
@@ -161,8 +163,6 @@ export default function EditorPage() {
           </div>
         </div>
       )}
-
-      <FormatToolbar editorRef={editorRef} />
     </div>
   )
 }
