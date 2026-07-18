@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { Settings, Plus, FileText, Folder } from 'lucide-react'
@@ -7,12 +7,16 @@ import { useFileTreeStore } from '../stores/file-tree-store'
 import { gitService } from '../services/git-service'
 import FileList from '../file-tree/FileList'
 import RecentFiles from '../file-tree/RecentFiles'
+import Modal from '../components/Modal'
 
 export default function FileTreePage() {
   const navigate = useNavigate()
   const { owner = '', name = '' } = useParams()
   const { isVerified, username } = useAuthStore()
   const [showMenu, setShowMenu] = useState(false)
+  const [modal, setModal] = useState<'folder' | 'file' | null>(null)
+  const [inputValue, setInputValue] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!isVerified) {
@@ -53,12 +57,8 @@ export default function FileTreePage() {
             <button
               onClick={() => {
                 setShowMenu(false)
-                const name = prompt('文件夹名')
-                if (name) {
-                  const store = useFileTreeStore.getState()
-                  const path = store.currentPath ? `${store.currentPath}/${name}` : name
-                  store.createDir(path)
-                }
+                setInputValue('')
+                setModal('folder')
               }}
               className="flex items-center gap-2 px-4 py-2.5 bg-paper-card dark:bg-dark-card
                          border border-paper-border dark:border-dark-border rounded-lg shadow-md
@@ -71,14 +71,8 @@ export default function FileTreePage() {
             <button
               onClick={() => {
                 setShowMenu(false)
-                const name = prompt('文件名（.md）')
-                if (name) {
-                  const store = useFileTreeStore.getState()
-                  const path = store.currentPath
-                    ? `${store.currentPath}/${name.endsWith('.md') ? name : name + '.md'}`
-                    : name.endsWith('.md') ? name : name + '.md'
-                  store.createFile(path)
-                }
+                setInputValue('')
+                setModal('file')
               }}
               className="flex items-center gap-2 px-4 py-2.5 bg-paper-card dark:bg-dark-card
                          border border-paper-border dark:border-dark-border rounded-lg shadow-md
@@ -98,6 +92,57 @@ export default function FileTreePage() {
           <Plus size={24} className={showMenu ? 'rotate-45' : ''} />
         </button>
       </div>
+
+      <Modal
+        open={modal === 'folder'}
+        title="新建文件夹"
+        onCancel={() => setModal(null)}
+        onConfirm={() => {
+          if (inputValue) {
+            const store = useFileTreeStore.getState()
+            const path = store.currentPath ? `${store.currentPath}/${inputValue}` : inputValue
+            store.createDir(path)
+          }
+          setModal(null)
+        }}
+        confirmDisabled={!inputValue}
+      >
+        <input
+          ref={inputRef}
+          autoFocus
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && inputValue) { setModal(null); const store = useFileTreeStore.getState(); const path = store.currentPath ? `${store.currentPath}/${inputValue}` : inputValue; store.createDir(path) } }}
+          placeholder="文件夹名"
+          className="w-full px-3 py-2 text-sm bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded-lg text-ink dark:text-dark-text placeholder-ink-muted/50 dark:placeholder-dark-text-secondary/50 outline-none focus:border-seal dark:focus:border-seal-dark transition-colors"
+        />
+      </Modal>
+
+      <Modal
+        open={modal === 'file'}
+        title="新建文件"
+        onCancel={() => setModal(null)}
+        onConfirm={() => {
+          if (inputValue) {
+            const store = useFileTreeStore.getState()
+            const name = inputValue.endsWith('.md') ? inputValue : inputValue + '.md'
+            const path = store.currentPath ? `${store.currentPath}/${name}` : name
+            store.createFile(path)
+          }
+          setModal(null)
+        }}
+        confirmDisabled={!inputValue}
+      >
+        <input
+          ref={inputRef}
+          autoFocus
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && inputValue) { setModal(null); const store = useFileTreeStore.getState(); const name = inputValue.endsWith('.md') ? inputValue : inputValue + '.md'; const path = store.currentPath ? `${store.currentPath}/${name}` : name; store.createFile(path) } }}
+          placeholder="文件名"
+          className="w-full px-3 py-2 text-sm bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded-lg text-ink dark:text-dark-text placeholder-ink-muted/50 dark:placeholder-dark-text-secondary/50 outline-none focus:border-seal dark:focus:border-seal-dark transition-colors"
+        />
+      </Modal>
     </div>
   )
 }

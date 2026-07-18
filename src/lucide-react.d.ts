@@ -27,4 +27,9 @@ declare module 'lucide-react' {
   export const Quote: Icon
   export const Code: Icon
   export const List: Icon
+  export const ListOrdered: Icon
+  export const Table: Icon
+  export const X: Icon
+  export const ChevronDown: Icon
+  export const Hash: Icon
 }
