@@ -238,6 +238,11 @@ html.dark .ink-toolbar button.active {
   pointer-events: none;
 }
 
+.token.operator, .token.entity, .token.url,
+.language-css .token.string, .style .token.string {
+  background: none !important;
+}
+
 .milkdown .ProseMirror p {
   font-size: 16px;
   line-height: 1.8;
