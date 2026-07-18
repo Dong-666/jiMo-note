@@ -1,65 +1,45 @@
+import { toggleMark, setBlockType, wrapIn } from 'prosemirror-commands'
 import { Bold, Italic, Strikethrough, Heading, Quote, Code, List } from 'lucide-react'
-import { TextSelection } from 'prosemirror-state'
 import type { EditorRef } from './MilkdownEditor'
 
 interface Props {
   editorRef: React.RefObject<EditorRef | null>
 }
 
-const tools = [
-  { cmd: 'bold', icon: Bold, label: '粗体', open: '**', close: '**' },
-  { cmd: 'italic', icon: Italic, label: '斜体', open: '*', close: '*' },
-  { cmd: 'strike', icon: Strikethrough, label: '删除线', open: '~~', close: '~~' },
-  null,
-  { cmd: 'heading', icon: Heading, label: '标题', open: '# ', close: '' },
-  { cmd: 'quote', icon: Quote, label: '引用', open: '> ', close: '' },
-  { cmd: 'code', icon: Code, label: '代码', open: '`', close: '`' },
-  { cmd: 'list', icon: List, label: '列表', open: '- ', close: '' },
-] as const
-
 export default function FormatToolbar({ editorRef }: Props) {
-  const exec = (cmd: string) => {
+  const run = (fn: (view: NonNullable<ReturnType<EditorRef['getView']>>) => void) => {
     const view = editorRef.current?.getView()
     if (!view) return
-
-    const tool = tools.find(t => t !== null && t.cmd === cmd)
-    if (!tool || tool === null) return
-
-    const { from, to } = view.state.selection
-    const selectedText = view.state.doc.textBetween(from, to)
-    const haveSelection = from !== to
-
-    if (haveSelection) {
-      const wrapped = tool.open + selectedText + tool.close
-      const tr = view.state.tr.replaceSelectionWith(view.state.schema.text(wrapped), false)
-      view.dispatch(tr)
-    } else {
-      const text = tool.open + tool.close
-      const pos = from
-      const tr = view.state.tr.insert(pos, view.state.schema.text(text))
-      const cursorPos = pos + tool.open.length
-      tr.setSelection(TextSelection.create(tr.doc, cursorPos))
-      view.dispatch(tr)
-    }
-
+    fn(view)
     view.focus()
   }
 
   return (
     <div className="ink-toolbar">
-      {tools.map((tool, i) =>
-        tool === null ? (
-          <div key={`div-${i}`} className="ink-divider" />
-        ) : (
-          <button
-            key={tool.cmd}
-            title={tool.label}
-            onClick={() => exec(tool.cmd)}
-          >
-            <tool.icon size={19} />
-          </button>
-        )
-      )}
+      <button title="粗体" onClick={() => run(v => toggleMark(v.state.schema.marks.strong)(v.state, v.dispatch))}>
+        <Bold size={19} />
+      </button>
+      <button title="斜体" onClick={() => run(v => toggleMark(v.state.schema.marks.emphasis)(v.state, v.dispatch))}>
+        <Italic size={19} />
+      </button>
+      <button title="删除线" onClick={() => run(v => toggleMark(v.state.schema.marks.strike_through)(v.state, v.dispatch))}>
+        <Strikethrough size={19} />
+      </button>
+
+      <div className="ink-divider" />
+
+      <button title="标题" onClick={() => run(v => setBlockType(v.state.schema.nodes.heading, { level: 2 })(v.state, v.dispatch))}>
+        <Heading size={19} />
+      </button>
+      <button title="引用" onClick={() => run(v => wrapIn(v.state.schema.nodes.blockquote)(v.state, v.dispatch))}>
+        <Quote size={19} />
+      </button>
+      <button title="代码" onClick={() => run(v => setBlockType(v.state.schema.nodes.code_block)(v.state, v.dispatch))}>
+        <Code size={19} />
+      </button>
+      <button title="列表" onClick={() => run(v => wrapIn(v.state.schema.nodes.bullet_list)(v.state, v.dispatch))}>
+        <List size={19} />
+      </button>
     </div>
   )
 }
