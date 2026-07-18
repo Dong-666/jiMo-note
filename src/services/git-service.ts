@@ -42,6 +42,7 @@ class GitHubService {
       owner: this._owner,
       repo: this._repo,
       path,
+      headers: { 'If-None-Match': '' },
     })
     const items = Array.isArray(data) ? data : [data]
     return items
@@ -65,6 +66,7 @@ class GitHubService {
       owner: this._owner,
       repo: this._repo,
       path,
+      headers: { 'If-None-Match': '' },
     })
     if (Array.isArray(data)) throw new Error('Path is a directory')
     if (data.type !== 'file') throw new Error('Not a file')
