@@ -39,10 +39,17 @@ export default function FormatToolbar({ editorRef }: Props) {
       })
     }
 
+    const origDispatch = view.dispatch
+    view.dispatch = (tr) => {
+      origDispatch.call(view, tr)
+      update()
+    }
+
     update()
     view.dom.addEventListener('mouseup', update)
     view.dom.addEventListener('keyup', update)
     return () => {
+      view.dispatch = origDispatch
       view.dom.removeEventListener('mouseup', update)
       view.dom.removeEventListener('keyup', update)
     }
