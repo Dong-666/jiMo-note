@@ -4,7 +4,7 @@ import { commonmark, createCodeBlockInputRule } from '@milkdown/preset-commonmar
 import {
   strikethroughAttr, strikethroughSchema, strikethroughInputRule, strikethroughKeymap,
   tableSchema, tableHeaderRowSchema, tableRowSchema, tableCellSchema, tableHeaderSchema,
-  tableEditingPlugin, tablePasteRule, tableKeymap, remarkGFMPlugin,
+  tableEditingPlugin, tablePasteRule, tableKeymap, commands, remarkGFMPlugin,
 } from '@milkdown/preset-gfm'
 import { prism } from '@milkdown/plugin-prism'
 import { history } from '@milkdown/plugin-history'
@@ -101,6 +101,7 @@ const EditorInner = forwardRef<EditorRef, { content: string }>(({ content }, ref
       .use(strikethroughSchema)
       .use(strikethroughInputRule)
       .use(strikethroughKeymap)
+      .use(commands)
       .use(tableSchema)
       .use(tableHeaderRowSchema)
       .use(tableRowSchema)
