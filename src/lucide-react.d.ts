@@ -10,7 +10,6 @@ declare module 'lucide-react' {
   export const ChevronRight: Icon
   export const RefreshCw: Icon
   export const Folder: Icon
-  export const File: Icon
   export const FileText: Icon
   export const Plus: Icon
   export const ArrowLeft: Icon
@@ -19,11 +18,6 @@ declare module 'lucide-react' {
   export const LogOut: Icon
   export const Sun: Icon
   export const Moon: Icon
-  export const AlertTriangle: Icon
-  export const Check: Icon
-  export const X: Icon
-  export const MoreHorizontal: Icon
-  export const Search: Icon
   export const Clock: Icon
   export const Bold: Icon
   export const Italic: Icon
@@ -32,9 +26,4 @@ declare module 'lucide-react' {
   export const Quote: Icon
   export const Code: Icon
   export const List: Icon
-  export const Link: Icon
-  export const Image: Icon
-  export const Table: Icon
-  export const Trash2: Icon
-  export const FileEdit: Icon
 }

@@ -9,12 +9,12 @@ export interface FileNode {
   size?: number
 }
 
-export interface FileContent extends FileNode {
+interface FileContent extends FileNode {
   content: string
   download_url?: string
 }
 
-export class GitHubService {
+class GitHubService {
   private octokit: Octokit | null = null
   private _owner = ''
   private _repo = ''
@@ -107,16 +107,6 @@ export class GitHubService {
     })
   }
 
-  async deleteFile(path: string, sha: string, message = 'Delete via 极墨'): Promise<void> {
-    const client = await this.getClient()
-    await client.rest.repos.deleteFile({
-      owner: this._owner,
-      repo: this._repo,
-      path,
-      message,
-      sha,
-    })
-  }
 }
 
 export const gitService = new GitHubService()

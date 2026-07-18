@@ -2,9 +2,7 @@ import { Octokit } from 'octokit'
 import { STORAGE_KEYS } from '../lib/config'
 import { encrypt, decrypt } from '../lib/crypto'
 
-const APP_PASSWORD = 'jimo::local::v1'
-
-export function getStoredToken(): string | null {
+function getStoredToken(): string | null {
   return localStorage.getItem(STORAGE_KEYS.ENCRYPTED_TOKEN)
 }
 
@@ -19,11 +17,11 @@ export function getStoredRepo(): string {
 export async function loadToken(): Promise<string | null> {
   const encrypted = getStoredToken()
   if (!encrypted) return null
-  return decrypt(encrypted, APP_PASSWORD)
+  return decrypt(encrypted)
 }
 
 export async function saveToken(token: string): Promise<void> {
-  const encrypted = await encrypt(token, APP_PASSWORD)
+  const encrypted = await encrypt(token)
   localStorage.setItem(STORAGE_KEYS.ENCRYPTED_TOKEN, encrypted)
 }
 
@@ -59,6 +57,3 @@ export async function verifyRepo(token: string, owner: string, repo: string): Pr
   }
 }
 
-export function hasAuth(): boolean {
-  return !!getStoredToken() && !!getStoredOwner() && !!getStoredRepo()
-}

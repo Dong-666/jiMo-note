@@ -203,7 +203,7 @@ html.dark .ink-toolbar button.seal {
 .milkdown .ProseMirror ul {
   margin: 12px 0;
   padding-left: 24px;
-  list-style: disc;
+  list-style-type: disc;
 }
 
 .milkdown .ProseMirror ol {
@@ -221,7 +221,7 @@ html.dark .ink-toolbar button.seal {
 
 .milkdown .ProseMirror ul > li::marker {
   color: var(--color-seal);
-  font-size: 0.75em;
+  font-size: 1.1em;
 }
 
 .milkdown .ProseMirror ol li {
