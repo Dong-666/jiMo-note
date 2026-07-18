@@ -12,14 +12,17 @@
     "@milkdown/core": "^7.21.3",
     "@milkdown/plugin-clipboard": "^7.21.3",
     "@milkdown/plugin-history": "^7.21.3",
+    "@milkdown/plugin-prism": "^7.21.3",
     "@milkdown/plugin-trailing": "^7.21.3",
     "@milkdown/preset-commonmark": "^7.21.3",
     "@milkdown/react": "^7.21.3",
     "lucide-react": "^0.400.0",
     "octokit": "^4.0.0",
+    "prismjs": "^1.30.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.0.0",
+    "refractor": "^5.0.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

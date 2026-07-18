@@ -49,7 +49,7 @@ function Dropdown({ children, open, onClose }: { children: React.ReactNode; open
   useClickOutside(ref, onClose)
   if (!open) return null
   return (
-    <div ref={ref} className="absolute top-full left-0 mt-1 min-w-[140px] bg-paper-card dark:bg-dark-card border border-paper-border dark:border-dark-border rounded-lg shadow-xl z-50 py-1 overflow-hidden">
+    <div ref={ref} className="absolute top-full left-0 mt-1 min-w-[150px] bg-paper-card dark:bg-dark-card border border-paper-border/60 dark:border-dark-border/60 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-50 py-1 overflow-hidden text-sm">
       {children}
     </div>
   )
@@ -59,8 +59,8 @@ function DropdownItem({ active, onClick, children }: { active?: boolean; onClick
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors cursor-pointer
-        ${active ? 'text-seal dark:text-seal-dark bg-seal/8 dark:bg-seal-dark/12' : 'text-ink dark:text-dark-text hover:bg-paper-border/50 dark:hover:bg-dark-border/50'}`}
+      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors cursor-pointer
+        ${active ? 'text-seal dark:text-seal-dark bg-seal/8 dark:bg-seal-dark/12 font-medium' : 'text-ink dark:text-dark-text hover:bg-paper-border/50 dark:hover:bg-dark-border/50'}`}
     >
       {children}
     </button>
@@ -215,13 +215,13 @@ export default function FormatToolbar({ editorRef }: Props) {
           ) : null}
         </button>
         <Dropdown open={codeOpen} onClose={() => setCodeOpen(false)}>
-          <div className="px-2 py-1.5">
+          <div className="px-2 py-1.5 border-b border-paper-border/50 dark:border-dark-border/50">
             <input
               autoFocus
               value={codeLang}
               onChange={e => setCodeLang(e.target.value)}
               placeholder="搜索或输入语言..."
-              className="w-full px-2 py-1 text-xs bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded text-ink dark:text-dark-text placeholder-ink-muted/50 outline-none"
+              className="w-full px-2.5 py-1.5 text-xs bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded-lg text-ink dark:text-dark-text placeholder-ink-muted/40 outline-none focus:border-seal/50 dark:focus:border-seal-dark/50 transition-colors"
               onKeyDown={e => {
                 if (e.key === 'Enter' && codeLang.trim()) {
                   setCodeOpen(false)
@@ -239,7 +239,7 @@ export default function FormatToolbar({ editorRef }: Props) {
               }}
             />
           </div>
-          <div className="max-h-[160px] overflow-y-auto">
+          <div className="max-h-[180px] overflow-y-auto scrollbar-thin">
             {LANGUAGES.filter(l => !codeLang || l.includes(codeLang.toLowerCase())).map(lang => (
               <DropdownItem
                 key={lang}
@@ -344,7 +344,9 @@ export default function FormatToolbar({ editorRef }: Props) {
             for (let r = 1; r < rows; r++) {
               md += '|' + '   |'.repeat(cols) + '\n'
             }
-            dispatch(state.tr.insertText(md, state.selection.from).scrollIntoView())
+            const textNode = state.schema.text('\n' + md)
+            const para = state.schema.nodes.paragraph.createAndFill({}, textNode)
+            if (para) dispatch(state.tr.replaceSelectionWith(para).scrollIntoView())
           })
         }}
         confirmText="插入"

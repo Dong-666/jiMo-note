@@ -184,6 +184,60 @@ html.dark .ink-toolbar button.active {
   line-height: 1.4;
 }
 
+.milkdown .ProseMirror h4 {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 14px 0 4px 0;
+  line-height: 1.45;
+}
+
+.milkdown .ProseMirror h5 {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 12px 0 4px 0;
+  line-height: 1.5;
+}
+
+.milkdown .ProseMirror h6 {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  margin: 12px 0 4px 0;
+  line-height: 1.5;
+}
+
+.milkdown .ProseMirror h1, .milkdown .ProseMirror h2, .milkdown .ProseMirror h3,
+.milkdown .ProseMirror h4, .milkdown .ProseMirror h5, .milkdown .ProseMirror h6 {
+  position: relative;
+}
+
+.milkdown .ProseMirror h1::before { content: 'H1'; }
+.milkdown .ProseMirror h2::before { content: 'H2'; }
+.milkdown .ProseMirror h3::before { content: 'H3'; }
+.milkdown .ProseMirror h4::before { content: 'H4'; }
+.milkdown .ProseMirror h5::before { content: 'H5'; }
+.milkdown .ProseMirror h6::before { content: 'H6'; }
+
+.milkdown .ProseMirror h1::before, .milkdown .ProseMirror h2::before,
+.milkdown .ProseMirror h3::before, .milkdown .ProseMirror h4::before,
+.milkdown .ProseMirror h5::before, .milkdown .ProseMirror h6::before {
+  position: absolute;
+  left: 0;
+  transform: translateX(calc(-100% - 8px));
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-ink-muted);
+  opacity: 0.35;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .milkdown .ProseMirror p {
   font-size: 16px;
   line-height: 1.8;
@@ -316,7 +370,42 @@ html.dark .milkdown .ProseMirror blockquote {
   color: var(--color-dark-text-secondary);
 }
 
+html.dark .milkdown .ProseMirror h4 {
+  color: var(--color-dark-text);
+}
+
+html.dark .milkdown .ProseMirror h5 {
+  color: var(--color-dark-text);
+}
+
+html.dark .milkdown .ProseMirror h6 {
+  color: var(--color-dark-text-secondary);
+}
+
+html.dark .milkdown .ProseMirror h1::before, html.dark .milkdown .ProseMirror h2::before,
+html.dark .milkdown .ProseMirror h3::before, html.dark .milkdown .ProseMirror h4::before,
+html.dark .milkdown .ProseMirror h5::before, html.dark .milkdown .ProseMirror h6::before {
+  color: var(--color-dark-text-secondary);
+}
+
 html.dark .milkdown .ProseMirror hr {
   border-top-color: var(--color-dark-border);
+}
+
+.ink-toolbar .scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ink-toolbar .scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ink-toolbar .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-paper-border);
+  border-radius: 2px;
+}
+
+html.dark .ink-toolbar .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-dark-border);
 }
 
