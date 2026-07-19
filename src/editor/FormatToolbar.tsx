@@ -390,8 +390,8 @@ export default function FormatToolbar({ editorRef }: Props) {
           run(v => {
             const { state, dispatch } = v
             const schema = state.schema
-            const cells = Array.from({ length: cols }, () => schema.nodes.table_cell.createAndFill())
-            const headerCells = Array.from({ length: cols }, () => schema.nodes.table_header.createAndFill())
+            const cells = Array.from({ length: cols }, () => schema.nodes.table_cell.createAndFill()).filter(Boolean)
+            const headerCells = Array.from({ length: cols }, () => schema.nodes.table_header.createAndFill()).filter(Boolean)
             const headerRow = schema.nodes.table_header_row.create(null, headerCells)
             const bodyRows = Array.from({ length: rows - 1 }, () => schema.nodes.table_row.create(null, cells))
             const table = schema.nodes.table.create(null, [headerRow, ...bodyRows])
