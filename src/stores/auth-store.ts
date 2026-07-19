@@ -7,6 +7,7 @@ interface AuthState {
   repo: string
   username: string
   isVerified: boolean
+  restoring: boolean
   loading: boolean
   error: string
 
@@ -22,6 +23,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   repo: '',
   username: '',
   isVerified: false,
+  restoring: true,
   loading: false,
   error: '',
 
@@ -72,23 +74,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   restoreSession: async () => {
-    const storedOwner = getStoredOwner()
-    const storedRepo = getStoredRepo()
-    if (!storedOwner || !storedRepo) return false
+    set({ restoring: true })
+    try {
+      const storedOwner = getStoredOwner()
+      const storedRepo = getStoredRepo()
+      if (!storedOwner || !storedRepo) {
+        set({ restoring: false })
+        return false
+      }
 
-    const token = await loadToken()
-    if (!token) return false
+      const token = await loadToken()
+      if (!token) {
+        set({ restoring: false })
+        return false
+      }
 
-    const user = await verifyToken(token)
-    if (!user) return false
+      const user = await verifyToken(token)
+      if (!user) {
+        set({ restoring: false })
+        return false
+      }
 
-    set({
-      token,
-      owner: storedOwner,
-      repo: storedRepo,
-      username: user.login,
-      isVerified: true,
-    })
-    return true
+      set({
+        token,
+        owner: storedOwner,
+        repo: storedRepo,
+        username: user.login,
+        isVerified: true,
+        restoring: false,
+      })
+      return true
+    } catch {
+      set({ restoring: false })
+      return false
+    }
   },
 }))
