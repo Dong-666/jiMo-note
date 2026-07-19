@@ -25,6 +25,7 @@ export default function EditorPage() {
   const [lightboxSlides, setLightboxSlides] = useState<{ src: string; alt: string }[]>([])
   const editorRef = useRef<EditorRef | null>(null)
   const editorContainerRef = useRef<HTMLDivElement>(null)
+  const prevLightboxOpen = useRef(lightboxOpen)
 
   useEffect(() => {
     if (!isVerified) {
@@ -88,6 +89,7 @@ export default function EditorPage() {
     if (!img || !img.closest('.milkdown')) return
 
     e.preventDefault()
+    ;(document.activeElement as HTMLElement)?.blur()
 
     const container = editorContainerRef.current
     if (!container) return
@@ -117,6 +119,16 @@ export default function EditorPage() {
     container.addEventListener('click', handleImageClick, true)
     return () => container.removeEventListener('click', handleImageClick, true)
   }, [handleImageClick, loading])
+
+  useEffect(() => {
+    if (prevLightboxOpen.current && !lightboxOpen) {
+      const timer = setTimeout(() => {
+        editorContainerRef.current?.focus({ preventScroll: true })
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+    prevLightboxOpen.current = lightboxOpen
+  }, [lightboxOpen])
 
   const fileName = filePath.split('/').pop() || ''
 
@@ -156,7 +168,7 @@ export default function EditorPage() {
 
       <FormatToolbar editorRef={editorRef} />
 
-      <div ref={editorContainerRef} className="flex-1 overflow-y-auto bg-paper dark:bg-dark-bg">
+      <div ref={editorContainerRef} tabIndex={-1} className="flex-1 overflow-y-auto bg-paper dark:bg-dark-bg focus:outline-none">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="w-5 h-5 border-2 border-ink-muted/30 dark:border-dark-text-secondary/30 border-t-ink-muted dark:border-t-dark-text-secondary rounded-full animate-spin" />
