@@ -81,11 +81,11 @@ export default function EditorPage() {
   const fileName = filePath.split('/').pop() || ''
 
   return (
-    <div className="flex flex-col h-dvh dark:bg-dark-bg">
+    <div className="flex flex-col h-full dark:bg-dark-bg">
       <header className="ink-header-bar">
         <div className="flex items-center gap-2 min-w-0">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(`/repo/${owner}/${name}`)}
             className="p-1 text-ink-muted dark:text-dark-text-secondary hover:text-ink dark:hover:text-dark-text rounded-md
                        hover:bg-paper-border/50 dark:hover:bg-dark-border/50 transition-colors cursor-pointer shrink-0"
           >
@@ -133,13 +133,13 @@ export default function EditorPage() {
       </div>
 
       {saveState === 'success' && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 px-4 py-2 bg-ink dark:bg-dark-text text-paper dark:text-dark-bg text-sm rounded-lg shadow-lg">
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:top-4 md:translate-x-0 px-4 py-2 bg-ink dark:bg-dark-text text-paper dark:text-dark-bg text-sm rounded-lg shadow-lg">
           已保存
         </div>
       )}
 
       {saveState === 'error' && errorMsg && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 px-4 py-2 bg-seal text-white text-sm rounded-lg shadow-lg max-w-xs text-center">
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:top-4 md:translate-x-0 px-4 py-2 bg-seal text-white text-sm rounded-lg shadow-lg max-w-xs text-center">
           {errorMsg}
           <div className="flex gap-2 mt-2 justify-center">
             <button

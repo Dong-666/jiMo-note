@@ -453,3 +453,34 @@ html.dark .ink-toolbar .scrollbar-thin::-webkit-scrollbar-thumb {
   background: var(--color-dark-border);
 }
 
+/* ── Responsive: Desktop Editor ── */
+
+@media (min-width: 768px) {
+  .milkdown {
+    max-width: 48rem;
+    margin: 0 auto;
+  }
+
+  .milkdown .ProseMirror {
+    font-size: 17px;
+    line-height: 1.9;
+  }
+
+  .milkdown .ProseMirror p {
+    font-size: 17px;
+    line-height: 1.9;
+  }
+
+  .milkdown .ProseMirror h1 {
+    font-size: 26px;
+  }
+
+  .milkdown .ProseMirror h2 {
+    font-size: 22px;
+  }
+
+  .milkdown .ProseMirror h3 {
+    font-size: 19px;
+  }
+}
+

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Settings, Plus, FileText, Folder } from 'lucide-react'
 import { useAuthStore } from '../stores/auth-store'
 import { useFileTreeStore } from '../stores/file-tree-store'
-import { gitService } from '../services/git-service'
 import FileList from '../file-tree/FileList'
 import RecentFiles from '../file-tree/RecentFiles'
 import Modal from '../components/Modal'
@@ -21,15 +20,12 @@ export default function FileTreePage() {
   useEffect(() => {
     if (!isVerified) {
       navigate('/login', { replace: true })
-      return
     }
-    gitService.configure(owner, name)
-    useFileTreeStore.getState().navigateTo('')
-  }, [owner, name, isVerified])
+  }, [isVerified])
 
   return (
     <div className="flex flex-col min-h-dvh">
-      <header className="ink-header-bar">
+      <header className="ink-header-bar md:hidden">
         <div>
           <h1 className="text-sm font-medium text-ink dark:text-dark-text">
             {owner}/{name}
@@ -45,13 +41,15 @@ export default function FileTreePage() {
         </button>
       </header>
 
-      <RecentFiles />
+      <div className="md:hidden">
+        <RecentFiles />
+      </div>
 
       <div className="flex-1 overflow-y-auto">
         <FileList />
       </div>
 
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 md:hidden">
         {showMenu && (
           <>
             <button

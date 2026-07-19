@@ -15,7 +15,7 @@ export default function FileList() {
   }
 
   const handleOpenFile = (path: string) => {
-    navigate(`/edit/${owner}/${name}/${path}`)
+    navigate(`/repo/${owner}/${name}/edit/${path}`)
   }
 
   if (loading && files.length === 0) {

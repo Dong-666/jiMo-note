@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
+import SplitLayout from './components/SplitLayout'
 import LoginPage from './routes/LoginPage'
 import FileTreePage from './routes/FileTreePage'
 import EditorPage from './routes/EditorPage'
@@ -28,8 +29,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/repo/:owner/:name/*" element={<FileTreePage />} />
-        <Route path="/edit/:owner/:name/*" element={<EditorPage />} />
+        <Route path="/repo/:owner/:name" element={<SplitLayout />}>
+          <Route index element={<FileTreePage />} />
+          <Route path="edit/*" element={<EditorPage />} />
+        </Route>
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </Layout>

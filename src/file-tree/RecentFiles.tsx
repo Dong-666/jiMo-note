@@ -49,7 +49,7 @@ export default function RecentFiles() {
         {files.map(file => (
           <button
             key={file.path}
-            onClick={() => navigate(`/edit/${owner}/${name}/${file.path}`)}
+            onClick={() => navigate(`/repo/${owner}/${name}/edit/${file.path}`)}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-left
                        hover:bg-paper-card dark:hover:bg-dark-card transition-colors duration-150 cursor-pointer"
           >
