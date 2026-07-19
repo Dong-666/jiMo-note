@@ -266,7 +266,7 @@ html.dark .milkdown .ProseMirror td {
 .milkdown .ProseMirror h3::before, .milkdown .ProseMirror h4::before,
 .milkdown .ProseMirror h5::before, .milkdown .ProseMirror h6::before {
   position: absolute;
-  left: 0;
+  left: 6px;
   transform: translateX(calc(-100% - 8px));
   font-size: 10px;
   font-weight: 400;

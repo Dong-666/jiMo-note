@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { toggleMark, setBlockType, wrapIn } from 'prosemirror-commands'
 import { liftTarget } from 'prosemirror-transform'
@@ -50,19 +50,10 @@ function useClickOutside(ref: React.RefObject<HTMLElement | null>, fn: () => voi
 
 function Dropdown({ children, open, onClose, triggerRef }: { children: React.ReactNode; open: boolean; onClose: () => void; triggerRef: React.RefObject<HTMLElement | null> }) {
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const [style, setStyle] = useState<React.CSSProperties>(() => {
-    if (!triggerRef.current) return {}
-    const rect = triggerRef.current.getBoundingClientRect()
-    return {
-      position: 'fixed',
-      top: rect.bottom + 4,
-      left: rect.left,
-      minWidth: Math.max(rect.width, 180),
-    }
-  })
+  const [style, setStyle] = useState<React.CSSProperties>({ position: 'fixed' })
   useClickOutside(dropdownRef, onClose, triggerRef)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open || !triggerRef.current) return
 
     const updatePosition = () => {
