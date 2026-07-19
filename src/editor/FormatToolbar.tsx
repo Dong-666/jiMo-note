@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { toggleMark, setBlockType, wrapIn } from 'prosemirror-commands'
 import { liftTarget } from 'prosemirror-transform'
 import { Bold, Italic, Strikethrough, Heading, Quote, Code, List, ListOrdered, Table } from 'lucide-react'
@@ -34,24 +35,78 @@ function liftOut(state: import('prosemirror-state').EditorState, dispatch: (tr: 
   if (target != null) dispatch(state.tr.lift(range, target).scrollIntoView())
 }
 
-function useClickOutside(ref: React.RefObject<HTMLElement | null>, fn: () => void) {
+function useClickOutside(ref: React.RefObject<HTMLElement | null>, fn: () => void, triggerRef?: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) fn()
+      const target = e.target as Node
+      if (ref.current && !ref.current.contains(target)) {
+        if (!triggerRef?.current?.contains(target)) fn()
+      }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [ref, fn])
+  }, [ref, fn, triggerRef])
 }
 
-function Dropdown({ children, open, onClose }: { children: React.ReactNode; open: boolean; onClose: () => void }) {
-  const ref = useRef<HTMLDivElement>(null)
-  useClickOutside(ref, onClose)
+function Dropdown({ children, open, onClose, triggerRef }: { children: React.ReactNode; open: boolean; onClose: () => void; triggerRef: React.RefObject<HTMLElement | null> }) {
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [style, setStyle] = useState<React.CSSProperties>(() => {
+    if (!triggerRef.current) return {}
+    const rect = triggerRef.current.getBoundingClientRect()
+    return {
+      position: 'fixed',
+      top: rect.bottom + 4,
+      left: rect.left,
+      minWidth: Math.max(rect.width, 180),
+    }
+  })
+  useClickOutside(dropdownRef, onClose, triggerRef)
+
+  useEffect(() => {
+    if (!open || !triggerRef.current) return
+
+    const updatePosition = () => {
+      const rect = triggerRef.current!.getBoundingClientRect()
+      const ddRect = dropdownRef.current?.getBoundingClientRect()
+      const ddWidth = ddRect?.width ?? 180
+      const ddHeight = ddRect?.height ?? 200
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const gap = 4
+
+      let left = rect.left
+      let top = rect.bottom + gap
+
+      if (left + ddWidth > vw - 12) {
+        left = Math.max(12, rect.right - ddWidth)
+      }
+      if (top + ddHeight > vh - 12) {
+        top = Math.max(12, rect.top - ddHeight - gap)
+      }
+
+      setStyle({
+        position: 'fixed',
+        top,
+        left,
+        minWidth: Math.max(rect.width, 180),
+      })
+    }
+
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    return () => window.removeEventListener('resize', updatePosition)
+  }, [open, triggerRef])
+
   if (!open) return null
-  return (
-    <div ref={ref} className="absolute top-full right-0 mt-1 min-w-[180px] max-w-[calc(100vw-24px)] bg-paper-card dark:bg-dark-card border border-paper-border/60 dark:border-dark-border/60 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-50 py-1 overflow-hidden text-sm">
+  return createPortal(
+    <div
+      ref={dropdownRef}
+      style={style}
+      className="min-w-[180px] max-w-[calc(100vw-24px)] bg-paper-card dark:bg-dark-card border border-paper-border/60 dark:border-dark-border/60 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-50 py-1 overflow-hidden text-sm"
+    >
       {children}
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -59,7 +114,7 @@ function DropdownItem({ active, onClick, children }: { active?: boolean; onClick
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left truncate transition-colors cursor-pointer
+      className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors cursor-pointer
         ${active ? 'text-seal dark:text-seal-dark bg-seal/8 dark:bg-seal-dark/12 font-medium' : 'text-ink dark:text-dark-text hover:bg-paper-border/50 dark:hover:bg-dark-border/50'}`}
     >
       {children}
@@ -78,6 +133,10 @@ export default function FormatToolbar({ editorRef }: Props) {
   const [tableModal, setTableModal] = useState(false)
   const [tableRows, setTableRows] = useState('3')
   const [tableCols, setTableCols] = useState('3')
+
+  const headingBtnRef = useRef<HTMLButtonElement>(null)
+  const codeBtnRef = useRef<HTMLButtonElement>(null)
+  const listBtnRef = useRef<HTMLButtonElement>(null)
 
   const update = (view: NonNullable<ReturnType<EditorRef['getView']>>) => {
     const { state } = view
@@ -155,6 +214,7 @@ export default function FormatToolbar({ editorRef }: Props) {
       {/* Heading dropdown */}
       <div className="relative">
         <button
+          ref={headingBtnRef}
           title="标题"
           onClick={() => setHeadingOpen(v => !v)}
           className={active.heading ? 'active' : ''}
@@ -166,7 +226,7 @@ export default function FormatToolbar({ editorRef }: Props) {
             </span>
           ) : null}
         </button>
-        <Dropdown open={headingOpen} onClose={() => setHeadingOpen(false)}>
+        <Dropdown open={headingOpen} onClose={() => setHeadingOpen(false)} triggerRef={headingBtnRef}>
           {[1, 2, 3, 4, 5].map(level => (
             <DropdownItem
               key={level}
@@ -206,7 +266,7 @@ export default function FormatToolbar({ editorRef }: Props) {
 
       {/* Code language dropdown */}
       <div className="relative">
-        <button title="代码" onClick={() => setCodeOpen(v => !v)} className={active.code ? 'active' : ''}>
+        <button ref={codeBtnRef} title="代码" onClick={() => setCodeOpen(v => !v)} className={active.code ? 'active' : ''}>
           <Code size={19} />
           {active.code && codeBlockLang ? (
             <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[9px] font-mono text-seal dark:text-seal-dark leading-none truncate max-w-[36px]">
@@ -214,7 +274,7 @@ export default function FormatToolbar({ editorRef }: Props) {
             </span>
           ) : null}
         </button>
-        <Dropdown open={codeOpen} onClose={() => setCodeOpen(false)}>
+        <Dropdown open={codeOpen} onClose={() => setCodeOpen(false)} triggerRef={codeBtnRef}>
           <div className="px-2 py-1.5 border-b border-paper-border/50 dark:border-dark-border/50">
             <input
               autoFocus
@@ -266,10 +326,10 @@ export default function FormatToolbar({ editorRef }: Props) {
 
       {/* List dropdown */}
       <div className="relative">
-        <button title="列表" onClick={() => setListOpen(v => !v)} className={(active.list || active.listOrdered) ? 'active' : ''}>
+        <button ref={listBtnRef} title="列表" onClick={() => setListOpen(v => !v)} className={(active.list || active.listOrdered) ? 'active' : ''}>
           {(active.listOrdered && !active.list) ? <ListOrdered size={19} /> : <List size={19} />}
         </button>
-        <Dropdown open={listOpen} onClose={() => setListOpen(false)}>
+        <Dropdown open={listOpen} onClose={() => setListOpen(false)} triggerRef={listBtnRef}>
           <DropdownItem
             active={!!active.list}
             onClick={() => {
