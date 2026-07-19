@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react
 import { createPortal } from 'react-dom'
 import { toggleMark, setBlockType, wrapIn } from 'prosemirror-commands'
 import { liftTarget } from 'prosemirror-transform'
-import { Bold, Italic, Strikethrough, Heading, Quote, Code, List, ListOrdered, Table } from 'lucide-react'
+import { Bold, Italic, Strikethrough, Heading, Quote, Code, List, ListOrdered, Table, Image } from 'lucide-react'
 import type { EditorRef } from './MilkdownEditor'
 import Modal from '../components/Modal'
 
@@ -124,6 +124,9 @@ export default function FormatToolbar({ editorRef }: Props) {
   const [tableModal, setTableModal] = useState(false)
   const [tableRows, setTableRows] = useState('3')
   const [tableCols, setTableCols] = useState('3')
+  const [imageModal, setImageModal] = useState(false)
+  const [imageUrl, setImageUrl] = useState('')
+  const [imageAlt, setImageAlt] = useState('')
 
   const headingBtnRef = useRef<HTMLButtonElement>(null)
   const codeBtnRef = useRef<HTMLButtonElement>(null)
@@ -419,6 +422,51 @@ export default function FormatToolbar({ editorRef }: Props) {
               value={tableCols}
               onChange={e => setTableCols(e.target.value)}
               className="w-full px-2 py-1.5 text-sm bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded text-ink dark:text-dark-text outline-none focus:border-seal"
+            />
+          </label>
+        </div>
+      </Modal>
+
+      {/* Image button */}
+      <button title="插入图片" onClick={() => { setImageUrl(''); setImageAlt(''); setImageModal(true) }}>
+        <Image size={19} />
+      </button>
+
+      <Modal
+        open={imageModal}
+        title="插入图片"
+        onCancel={() => setImageModal(false)}
+        onConfirm={() => {
+          setImageModal(false)
+          run(v => {
+            const { state, dispatch } = v
+            const node = state.schema.nodes.image.create({ src: imageUrl, alt: imageAlt })
+            dispatch(state.tr.replaceSelectionWith(node).scrollIntoView())
+          })
+        }}
+        confirmText="插入"
+        confirmDisabled={!imageUrl}
+      >
+        <div className="flex flex-col gap-3">
+          <label>
+            <span className="block text-xs text-ink-muted dark:text-dark-text-secondary mb-1">图片 URL</span>
+            <input
+              autoFocus
+              type="text"
+              value={imageUrl}
+              onChange={e => setImageUrl(e.target.value)}
+              placeholder="https://example.com/image.png"
+              className="w-full px-2 py-1.5 text-sm bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded text-ink dark:text-dark-text outline-none focus:border-seal placeholder-ink-muted/40"
+            />
+          </label>
+          <label>
+            <span className="block text-xs text-ink-muted dark:text-dark-text-secondary mb-1">替代文本</span>
+            <input
+              type="text"
+              value={imageAlt}
+              onChange={e => setImageAlt(e.target.value)}
+              placeholder="图片描述"
+              className="w-full px-2 py-1.5 text-sm bg-paper dark:bg-dark-bg border border-paper-border dark:border-dark-border rounded text-ink dark:text-dark-text outline-none focus:border-seal placeholder-ink-muted/40"
             />
           </label>
         </div>
