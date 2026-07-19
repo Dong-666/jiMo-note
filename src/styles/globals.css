@@ -373,6 +373,18 @@ html.dark .milkdown .ProseMirror td {
   margin: 20px 0;
 }
 
+.milkdown .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.milkdown .ProseMirror img:hover {
+  opacity: 0.85;
+}
+
 /* ── Dark Mode Overrides ── */
 
 html.dark .milkdown .ProseMirror {

@@ -18,7 +18,6 @@ class GitHubService {
   private octokit: Octokit | null = null
   private _owner = ''
   private _repo = ''
-
   private async getClient(): Promise<Octokit> {
     if (this.octokit) return this.octokit
     const token = await loadToken()

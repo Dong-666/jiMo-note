@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save, FileText } from 'lucide-react'
 import { useAuthStore } from '../stores/auth-store'
 import { gitService } from '../services/git-service'
 import MilkdownEditor from '../editor/MilkdownEditor'
 import FormatToolbar from '../editor/FormatToolbar'
+import ImagePreview from '../components/ImagePreview'
 import { addRecentFile } from '../file-tree/RecentFiles'
 import type { EditorRef } from '../editor/MilkdownEditor'
 
@@ -19,7 +20,11 @@ export default function EditorPage() {
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [editorKey, setEditorKey] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [lightboxSlides, setLightboxSlides] = useState<{ src: string; alt: string }[]>([])
   const editorRef = useRef<EditorRef | null>(null)
+  const editorContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!isVerified) {
@@ -78,6 +83,41 @@ export default function EditorPage() {
     }
   }
 
+  const handleImageClick = useCallback((e: MouseEvent) => {
+    const img = (e.target as HTMLElement).closest('img')
+    if (!img || !img.closest('.milkdown')) return
+
+    e.preventDefault()
+
+    const container = editorContainerRef.current
+    if (!container) return
+
+    const allImgs = container.querySelectorAll('.milkdown img')
+    const slides: { src: string; alt: string }[] = []
+    let clickedIndex = -1
+
+    allImgs.forEach((el, i) => {
+      const imgEl = el as HTMLImageElement
+      const src = imgEl.getAttribute('src') || ''
+      const alt = imgEl.getAttribute('alt') || ''
+      slides.push({ src, alt })
+      if (el === img) clickedIndex = i
+    })
+
+    if (clickedIndex >= 0) {
+      setLightboxIndex(clickedIndex)
+      setLightboxSlides(slides)
+      setLightboxOpen(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    const container = editorContainerRef.current
+    if (!container || loading) return
+    container.addEventListener('click', handleImageClick, true)
+    return () => container.removeEventListener('click', handleImageClick, true)
+  }, [handleImageClick, loading])
+
   const fileName = filePath.split('/').pop() || ''
 
   return (
@@ -116,7 +156,7 @@ export default function EditorPage() {
 
       <FormatToolbar editorRef={editorRef} />
 
-      <div className="flex-1 overflow-y-auto bg-paper dark:bg-dark-bg">
+      <div ref={editorContainerRef} className="flex-1 overflow-y-auto bg-paper dark:bg-dark-bg">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="w-5 h-5 border-2 border-ink-muted/30 dark:border-dark-text-secondary/30 border-t-ink-muted dark:border-t-dark-text-secondary rounded-full animate-spin" />
@@ -131,6 +171,14 @@ export default function EditorPage() {
           </div>
         )}
       </div>
+
+      <ImagePreview
+        open={lightboxOpen}
+        index={lightboxIndex}
+        slides={lightboxSlides}
+        onClose={() => setLightboxOpen(false)}
+        onIndexChange={setLightboxIndex}
+      />
 
       {saveState === 'success' && (
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:top-4 md:translate-x-0 px-4 py-2 bg-ink dark:bg-dark-text text-paper dark:text-dark-bg text-sm rounded-lg shadow-lg">
